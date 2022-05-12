@@ -19,93 +19,20 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    
-        
-    steps:     
-    
 
-    - uses: trstringer/manual-approval@v1
-      with:
-        secret: ${{ github.TOKEN }}
-        approvers: InduSekharSajja
-    
-    - name: Set up JDK 11
-      uses: actions/setup-java@v1
-      # Setup JDK 11
-      with:
-          java-version: 1.11
-          
-    - uses: actions/checkout@v2
-      with:
-          # fetch depth is used to disable shallow cloning while sonarqube analysis
-          fetch-depth: 0
+    name: build
 
-    - uses: actions/setup-dotnet@v1
-      # Setup for dotnet
-      with:
-        dotnet-version: 6.0.x
-        
-    - uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1.x
-        
-    - name: Use NuGet
-      # Use Nuget for Dotnet Build
-      uses: nuget/setup-nuget@v1
-      
-    - name: NuGet restore
-      run: nuget restore '${{ github.workspace }}/src/TransCelerate.SDR.sln'      
-      
-    - name: Find and Replace User Name - Using Build Variable
-      # Replace the Keyvault value in appsettings.json
-      run: |
-        find ${{ github.workspace }}/src/TransCelerate.SDR.WebApi/appsettings.json -type f -exec sed -i ''s@{#KeyVault-Name#}@'${{ secrets.KEYVAULT_NAME }}'@g'' {} \;
-        
-    - name: Build solution **\*.sln
-      # Build dotnet code
-      run: dotnet publish 'src/TransCelerate.SDR.sln' --configuration release
-      
-    - name: Zip publish files
-      shell: pwsh
-      # Zip the build artifact publish folder
-      run: |
-          Compress-Archive -Path "${{ github.workspace }}/src/TransCelerate.SDR.WebApi/bin/Release/net6.0/publish/**" -DestinationPath "${{ github.workspace }}\Publish.zip" -Force  
-     
-     
-    - name: 'Publish Artifact: Artifact'
-      uses: actions/upload-artifact@v2
-      # Publish the Build artifact in github
-      with:
-        path: '${{ github.workspace }}/Publish.zip'
-        name: Build-Artifact
-        
-    ###############################---------------NUnit Test Cases-----------------------#############################
-        
-    - name: Dotnet Test
-      # Running Dotnet test cases and also scanning the code code in sonar with using code coverage file
-      run: |
-          dotnet test 'src/TransCelerate.SDR.UnitTesting/TransCelerate.SDR.UnitTesting.csproj' --configuration release  --collect "XPlat Code Coverage" --logger trx 
-          cp ${{ github.workspace }}/src/TransCelerate.SDR.UnitTesting/TestResults/*/coverage.cobertura.xml '${{ github.workspace }}/coverage.cobertura.xml'
-    
-    - name: Code Coverage Summary Report
-      uses: irongut/CodeCoverageSummary@v1.0.2
-      # Code Coverage report
-      with:
-        filename: coverage.cobertura.xml
-        badge: true
-        format: 'markdown'
-        output: 'both'
-        
-    - name: use this action, test solution dir
-      uses: zyborg/dotnet-tests-report@v1
-      # Publish the test cases run in Github
-      with:
-        project_path: '${{ github.workspace }}/src/TransCelerate.SDR.UnitTesting'
-        report_name: 'TransCelerate.SDR.UnitTesting'
-        report_title: API Tests Report
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-
-
-
-
-  
+    steps:
+      - name: Build
+        run: echo building
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: InduSekharSajja
+      - name: Deploy to production
+        run: echo deploying
