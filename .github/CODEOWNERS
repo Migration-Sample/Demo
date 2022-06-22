@@ -1,0 +1,10 @@
+# These owners will be the default owners for everything in
+# the repo. Unless a later match takes precedence,
+
+@global-InduSekharSajja
+
+#Hello There Team 
+#TeamTesting
+
+*.go indu.sekhar.sajja@accenture.com
+
